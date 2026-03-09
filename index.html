@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Food Waste Donation Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+  <link rel="preconnect" href="https://unpkg.com" crossorigin />
+  <link rel="dns-prefetch" href="//cdn.jsdelivr.net" />
+  <link rel="dns-prefetch" href="//cdnjs.cloudflare.com" />
+  <link rel="dns-prefetch" href="//unpkg.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPqJywQd0R8l4vWZw3K+yQ+FNSbKG5llgmMqw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="pageLoader" class="page-loader">
+    <div class="loader-core"></div>
+    <p>Loading donation network...</p>
+  </div>
+
+  <div class="ambient ambient-a"></div>
+  <div class="ambient ambient-b"></div>
+
+  <header class="top-shell container-xl py-4 py-lg-5">
+    <div class="hero card-ui">
+      <div class="row align-items-center g-4">
+        <div class="col-lg-8">
+          <span class="hero-pill"><i class="fa-solid fa-seedling"></i> Bangladesh Food Rescue</span>
+          <h1>Food Waste Donation Platform</h1>
+          <p class="mb-0">A clean, modern command center that helps restaurants, volunteers, and admins coordinate food rescue in real time.</p>
+        </div>
+        <div class="col-lg-4 text-lg-end">
+          <div class="hero-illustration">
+            <i class="fa-solid fa-hand-holding-heart"></i>
+          </div>
+          <div class="notification-chip mt-3" id="notificationChip">
+            <i class="fa-solid fa-bell"></i>
+            <span id="notificationCount">0</span> live alerts
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="main-nav mt-3" aria-label="Main navigation">
+      <button class="nav-btn active" data-view="home"><i class="fa-solid fa-house"></i> Home</button>
+      <button class="nav-btn" data-view="restaurant"><i class="fa-solid fa-utensils"></i> Restaurant Dashboard</button>
+      <button class="nav-btn" data-view="volunteer"><i class="fa-solid fa-bicycle"></i> Volunteer Dashboard</button>
+      <button class="nav-btn" data-view="admin"><i class="fa-solid fa-shield-halved"></i> Admin Panel</button>
+    </nav>
+  </header>
+
+  <main class="container-xl pb-4 pb-lg-5">
+    <section id="home" class="view active" aria-labelledby="homeTitle">
+      <div class="section-head">
+        <h2 id="homeTitle"><i class="fa-solid fa-chart-line"></i> Home Overview</h2>
+        <p>Live donation feed and Bangladesh map of active food pickups.</p>
+      </div>
+
+      <div id="homeStats" class="stats-grid"></div>
+
+      <article class="panel card-ui mb-3">
+        <div class="filter-toolbar">
+          <div class="filter-item filter-item-wide">
+            <label for="searchFood"><i class="fa-solid fa-magnifying-glass"></i> Search Food</label>
+            <input type="text" id="searchFood" placeholder="Search by food, donor, or location" />
+          </div>
+          <div class="filter-item">
+            <label for="foodTypeFilter"><i class="fa-solid fa-bowl-food"></i> Food Type</label>
+            <select id="foodTypeFilter">
+              <option value="all">All Types</option>
+              <option value="meal">Meal</option>
+              <option value="snack">Snack</option>
+              <option value="dessert">Dessert</option>
+              <option value="produce">Produce</option>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label for="distanceFilter"><i class="fa-solid fa-route"></i> Max Distance</label>
+            <select id="distanceFilter">
+              <option value="all">Any Distance</option>
+              <option value="5">Within 5 km</option>
+              <option value="10">Within 10 km</option>
+              <option value="20">Within 20 km</option>
+              <option value="50">Within 50 km</option>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label for="quantityFilter"><i class="fa-solid fa-box-open"></i> Min Quantity</label>
+            <select id="quantityFilter">
+              <option value="0">Any Quantity</option>
+              <option value="10">10+ servings</option>
+              <option value="20">20+ servings</option>
+              <option value="30">30+ servings</option>
+            </select>
+          </div>
+        </div>
+      </article>
+
+      <div class="row g-3 g-lg-4">
+        <div class="col-12 col-lg-6">
+          <article class="panel card-ui h-100">
+            <div class="panel-head">
+              <h3><i class="fa-solid fa-box-open"></i> Food Donation List</h3>
+              <select id="statusFilter" aria-label="Filter donations by status" class="form-select form-select-sm w-auto">
+                <option value="all">All Status</option>
+                <option value="available">Available</option>
+                <option value="accepted">Accepted</option>
+                <option value="picked-up">Picked Up</option>
+                <option value="delivered">Delivered</option>
+              </select>
+            </div>
+            <div id="donationList" class="donation-list"></div>
+          </article>
+        </div>
+
+        <div class="col-12 col-lg-6">
+          <article class="panel card-ui h-100">
+            <div class="panel-head">
+              <h3><i class="fa-solid fa-map-location-dot"></i> Map View</h3>
+              <div class="d-flex gap-2 align-items-center">
+                <button id="trackToggleBtn" class="action-btn secondary" type="button"><i class="fa-solid fa-location-crosshairs"></i> Enable Live Tracking</button>
+                <span class="subtle" id="trackingStatus">Tracking off</span>
+              </div>
+            </div>
+            <div id="map" class="map-view" aria-label="Donation map"></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="restaurant" class="view" aria-labelledby="restaurantTitle">
+      <div class="section-head">
+        <h2 id="restaurantTitle"><i class="fa-solid fa-store"></i> Restaurant Dashboard</h2>
+        <p>Post surplus food and monitor your donation timeline.</p>
+      </div>
+
+      <div class="row g-3 g-lg-4">
+        <div class="col-12 col-lg-6">
+          <article class="panel card-ui h-100">
+            <h3><i class="fa-solid fa-plus"></i> Post Food</h3>
+            <form id="postFoodForm" class="form-grid mt-3">
+              <label>
+                Food Name
+                <input type="text" id="foodName" placeholder="Veg Biryani" required />
+              </label>
+              <label>
+                Quantity (servings)
+                <input type="number" id="foodQty" min="1" placeholder="20" required />
+              </label>
+              <label>
+                Location
+                <input type="text" id="foodLocation" placeholder="Dhaka" required />
+              </label>
+              <label>
+                Latitude
+                <input type="number" id="foodLat" step="0.0001" placeholder="23.8103" required />
+              </label>
+              <label>
+                Longitude
+                <input type="number" id="foodLng" step="0.0001" placeholder="90.4125" required />
+              </label>
+              <label>
+                Expires In (hours)
+                <input type="number" id="foodExpiry" min="1" max="24" value="4" required />
+              </label>
+              <button type="submit" class="cta"><i class="fa-solid fa-paper-plane"></i> Publish Donation</button>
+            </form>
+          </article>
+        </div>
+
+        <div class="col-12 col-lg-6">
+          <article class="panel card-ui h-100">
+            <h3><i class="fa-solid fa-clock-rotate-left"></i> Donation History</h3>
+            <div class="table-wrap mt-3">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Food</th>
+                    <th>Qty</th>
+                    <th>Status</th>
+                    <th>Posted</th>
+                  </tr>
+                </thead>
+                <tbody id="historyTable"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="volunteer" class="view" aria-labelledby="volunteerTitle">
+      <div class="section-head">
+        <h2 id="volunteerTitle"><i class="fa-solid fa-people-carry-box"></i> Volunteer Dashboard</h2>
+        <p>Find nearby food and request pickup in one click. Track progress: Available -> Accepted -> Picked Up -> Delivered.</p>
+      </div>
+
+      <div class="row g-3 g-lg-4">
+        <div class="col-12 col-lg-6">
+          <article class="panel card-ui h-100">
+            <div class="panel-head">
+              <h3><i class="fa-solid fa-location-crosshairs"></i> Nearby Donations</h3>
+              <select id="volunteerLocation" class="form-select form-select-sm w-auto">
+                <option value="23.8103,90.4125">Dhaka</option>
+                <option value="22.3569,91.7832">Chattogram</option>
+                <option value="22.8456,89.5403">Khulna</option>
+              </select>
+            </div>
+            <div id="nearbyList" class="donation-list"></div>
+          </article>
+        </div>
+
+        <div class="col-12 col-lg-6">
+          <article class="panel card-ui h-100">
+            <h3><i class="fa-solid fa-list-check"></i> Pickup Requests</h3>
+            <div class="table-wrap mt-3">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Donation ID</th>
+                    <th>Volunteer</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="pickupTable"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+
+        <div class="col-12">
+          <article class="panel card-ui">
+            <div class="panel-head">
+              <h3><i class="fa-solid fa-bolt"></i> Real-Time Notifications</h3>
+              <span class="subtle">Nearby availability and workflow updates</span>
+            </div>
+            <div id="notificationFeed" class="notification-feed"></div>
+          </article>
+        </div>
+
+        <div class="col-12">
+          <article class="panel card-ui">
+            <div class="panel-head">
+              <h3><i class="fa-solid fa-trophy"></i> Community Rewards</h3>
+              <span class="subtle">Leaderboard, badges, and points to encourage participation</span>
+            </div>
+            <div class="community-grid">
+              <div>
+                <h4 class="small-head">Volunteer Leaderboard</h4>
+                <div id="volunteerLeaderboard"></div>
+              </div>
+              <div>
+                <h4 class="small-head">Your Rewards</h4>
+                <div class="reward-card">
+                  <p><strong id="currentVolunteerName">Volunteer</strong></p>
+                  <p class="mb-2">Points: <b id="currentVolunteerPoints">0</b></p>
+                  <div id="currentVolunteerBadges" class="badges-wrap"></div>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="admin" class="view" aria-labelledby="adminTitle">
+      <div class="section-head">
+        <h2 id="adminTitle"><i class="fa-solid fa-user-shield"></i> Admin Panel</h2>
+        <p>Manage user access and review platform performance reports.</p>
+      </div>
+
+      <div class="row g-3 g-lg-4">
+        <div class="col-12 col-lg-6">
+          <article class="panel card-ui h-100">
+            <h3><i class="fa-solid fa-users-gear"></i> Manage Users</h3>
+            <div class="table-wrap mt-3">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTable"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+
+        <div class="col-12 col-lg-6">
+          <article class="panel card-ui h-100">
+            <h3><i class="fa-solid fa-chart-pie"></i> Reports</h3>
+            <div class="report-grid mt-3">
+              <div class="report-card">
+                <span>Total Donations</span>
+                <strong id="reportDonations">0</strong>
+              </div>
+              <div class="report-card">
+                <span>Successful Pickups</span>
+                <strong id="reportPickups">0</strong>
+              </div>
+              <div class="report-card">
+                <span>Active Volunteers</span>
+                <strong id="reportVolunteers">0</strong>
+              </div>
+              <div class="report-card">
+                <span>Food Saved (servings)</span>
+                <strong id="reportFoodSaved">0</strong>
+              </div>
+              <div class="report-card">
+                <span>People Helped (est.)</span>
+                <strong id="reportPeopleHelped">0</strong>
+              </div>
+            </div>
+            <div class="mini-chart mt-3" id="statusChart"></div>
+          </article>
+        </div>
+
+        <div class="col-12 col-lg-6">
+          <article class="panel card-ui h-100">
+            <h3><i class="fa-solid fa-ranking-star"></i> Activity Leaders</h3>
+            <div class="activity-grid mt-3">
+              <div>
+                <h4 class="small-head">Most Active Restaurants</h4>
+                <div id="topRestaurants"></div>
+              </div>
+              <div>
+                <h4 class="small-head">Most Active Volunteers</h4>
+                <div id="topVolunteers"></div>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="col-12 col-lg-6">
+          <article class="panel card-ui h-100">
+            <h3><i class="fa-solid fa-robot"></i> AI-Based Demand Prediction</h3>
+            <p class="subtle mb-2">Predicted need by area based on active vs delivered donations.</p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Area</th>
+                    <th>Demand Score</th>
+                    <th>Recommendation</th>
+                  </tr>
+                </thead>
+                <tbody id="demandPredictionTable"></tbody>
+              </table>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script defer src="app.js"></script>
+</body>
+</html>

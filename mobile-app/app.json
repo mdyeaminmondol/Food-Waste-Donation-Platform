@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "Food Donation Mobile",
+    "slug": "food-donation-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#f4f7fb"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#f4f7fb"
+      },
+      "package": "com.fooddonation.mobile"
+    }
+  }
+}
